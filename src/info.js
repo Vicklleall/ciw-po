@@ -1,10 +1,15 @@
 const { version } = require('../package.json');
+const config = require('../config');
 const RoomManager = require('./room');
 
 module.exports = (app, io) => {
-  // 获取版本信息
-  app.get('/i/version', (req, res) => {
-    res.send(version);
+  // 获取服务器信息
+  app.get('/i/', (req, res) => {
+    res.json({
+      v: version,               // 版本
+      i: config.updateInterval, // 数据更新帧间隔
+      a: io.engine.clientsCount < config.maxConnections // 是否可用
+    });
   });
 
   for (const mode of ['plain', 'race', 'coop']) {

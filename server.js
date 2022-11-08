@@ -4,6 +4,8 @@ const express = require('express');
 const { createServer } = require(config.https ? 'https' : 'http');
 const { Server } = require("socket.io");
 
+const globalLogger = require('./src/logger');
+
 const app = express();
 const server = createServer(config.https, app);
 
@@ -18,6 +20,7 @@ if (config.checkOrigin) {
   };
   app.use('/i', (req, res, next) => {
     if (req.headers['user-agent'].includes('CloudIWanna') && req.headers['origin'] === 'ciw://app') {
+      res.setHeader('CIW_PO', '*');
       next();
     } else {
       res.status(403).end();
@@ -27,11 +30,15 @@ if (config.checkOrigin) {
 
 const io = new Server(server, socketOptions);
 
+io.engine.on('headers', headers => {
+  headers['CIW_PO'] = '*';
+});
+
 // 服务器信息获取路由
 require('./src/info')(app, io);
 // 联机服务
 require('./src/socket')(io);
 
 server.listen(config.port, () => {
-  console.log('Running ciw-po server on port ' + config.port);
+  globalLogger.info('Running ciw-po server on port ' + config.port);
 });

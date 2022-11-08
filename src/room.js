@@ -1,3 +1,10 @@
+const path = require('path');
+const { createLogger, format, transports } = require('winston');
+
+const { logLevel } = require('../config');
+const globalLogger = require('./logger');
+const { Player } = require('./player');
+
 const Room = class {
   constructor(isPublic, mode, id, name) {
     this.isPublic = isPublic;
@@ -6,7 +13,6 @@ const Room = class {
     this.name = name;
     this.players = [];
     this.createdAt = Date.now();
-    this.updatedAt = Date.now();
     if (mode === 'race') {
       this.data = {};
     } else if (mode === 'coop') {
@@ -14,29 +20,46 @@ const Room = class {
     }
     this.destroyTime = 60_000;
     this.destroyTimeout = 0;
-    console.log('Create room ' + id);
+    // 按游戏id写入日志
+    this.logId = `[${id.slice(10) || id}]`.padEnd(12, ' ');
+    this.logger = createLogger({
+      level: logLevel,
+      label: this.id.slice(10),
+      format: format.combine(
+        format.timestamp({ format: 'YYYY-MM-DD hh:mm:ss' }),
+        format.printf(info => `${info.timestamp} > ${this.logId} ${info.message}`)
+      ),
+      transports: [
+        new transports.File({ filename: path.join('logs', 'room', this.id.slice(0, 10) + '.log') })
+      ]
+    });
+    if (name) {
+      globalLogger.verbose(`create room ${id}: ${name}`);
+    } else {
+      globalLogger.verbose(`create room ${id}`);
+    }
   }
 
   joinPlayer(user) {
     const UID = user.slice(0, 10);
     let player = this.players.find(p => p.uid === UID);
     if (!player) {
-      player = {uid: UID, data: {i: user}};
+      player = new Player(user);
       this.players.push(player);
     }
     if (this.destroyTimeout) {
       clearTimeout(this.destroyTimeout);
       this.destroyTimeout = 0;
     }
-    console.log(`Player ${UID} joined room ${this.id}`);
+    this.logger.verbose(`player ${player.name}(${UID}) joined`);
     return player;
   }
 
   removePlayer(player) {
     const i = this.players.indexOf(player);
     if (~i) this.players.splice(i, 1);
+    this.logger.verbose(`player ${player.name}(${player.uid}) left`);
     this.delayDestroy();
-    console.log(`Player ${player.uid} left room ${this.id}`);
   }
 
   delayDestroy() { // 延迟销毁房间
@@ -113,16 +136,15 @@ const RoomManager = {
       if (room.id.length === 10) { // 大厅
         if (rooms.length === 1) {  // 仅剩下大厅时
           delete this.publicRooms[room.mode][GID];
-          console.log('Remove room ' + room.id);
+          globalLogger.verbose(`remove room ${GID}`);
         }
       } else { // 普通房间
         rooms.splice(rooms.indexOf(room), 1);
         rooms[0].delayDestroy(); // 检查销毁大厅
-        console.log('Remove room ' + room.id);
+        globalLogger.verbose(`remove room ${room.id}`);
       }
     } else {
       delete this.privateRooms[room.mode][room.id];
-      console.log('Remove room ' + room.id);
     }
   },
 

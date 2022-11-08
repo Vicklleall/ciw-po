@@ -20,11 +20,12 @@ module.exports = (mode, socket) => {
       socket.$user = room.joinPlayer(user);
     }
     socket.$room = room;
+    socket.$user.socket = socket;
 
     socket.join(roomId);
     socket.to(roomId).emit('msg:join', user);
 
-    const roomData = {p: room.players.map(p => p.data)};
+    const roomData = {p: room.players.map(p => p.getFullData())};
     if (room.data) roomData.d = room.data;
     callback(roomData);
   });
@@ -33,6 +34,6 @@ module.exports = (mode, socket) => {
   socket.on('disconnect', () => {
     if (!socket.$room || !socket.$user) return;
     socket.$room.removePlayer(socket.$user);
-    socket.to(socket.$room.id).emit('msg:leave', socket.$user.data.i);
+    socket.to(socket.$room.id).emit('msg:leave', socket.$user.uid);
   });
 };
