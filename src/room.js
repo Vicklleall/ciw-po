@@ -145,6 +145,7 @@ const RoomManager = {
       }
     } else {
       delete this.privateRooms[room.mode][room.id];
+      globalLogger.verbose(`Remove room ${room.id}`);
     }
   },
 
