@@ -9,7 +9,7 @@ const errorTransports = new transports.File({
 });
 
 module.exports = createLogger({
-  level: logLevel,
+  level: logLevel ?? 'info',
   format: format.combine(
     format.timestamp({ format: 'YYYY-MM-DD hh:mm:ss' }),
     format.printf(info => `[${info.level}] ${info.timestamp} > ${info.message}`)

@@ -34,9 +34,9 @@ const Room = class {
       ]
     });
     if (name) {
-      globalLogger.verbose(`create room ${id}: ${name}`);
+      globalLogger.verbose(`Create room ${id}: ${name}`);
     } else {
-      globalLogger.verbose(`create room ${id}`);
+      globalLogger.verbose(`Create room ${id}`);
     }
   }
 
@@ -136,12 +136,12 @@ const RoomManager = {
       if (room.id.length === 10) { // 大厅
         if (rooms.length === 1) {  // 仅剩下大厅时
           delete this.publicRooms[room.mode][GID];
-          globalLogger.verbose(`remove room ${GID}`);
+          globalLogger.verbose(`Remove room ${GID}`);
         }
       } else { // 普通房间
         rooms.splice(rooms.indexOf(room), 1);
         rooms[0].delayDestroy(); // 检查销毁大厅
-        globalLogger.verbose(`remove room ${room.id}`);
+        globalLogger.verbose(`Remove room ${room.id}`);
       }
     } else {
       delete this.privateRooms[room.mode][room.id];
