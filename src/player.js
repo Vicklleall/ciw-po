@@ -22,13 +22,19 @@ const registerPlayerEvents = socket => {
   socket.on('data:pos', data => {
     if (!socket.$room || !socket.$user) return;
     const roomChange = data.r !== socket.$user.data.r;
+    const timestamp = Date.now();
     socket.$user.updatePosition(data);
     if (roomChange) {
-      socket.to(socket.$room.id).emit('data:pos', socket.$user.data);
+      socket.to(socket.$room.id).emit('data:pos', socket.$user.data, timestamp);
     } else {
       for (const player of socket.$room.players) {
         if (player !== socket.$user && player.data.r === data.r && data.r >= 0) {
-          player.socket.volatile.emit('data:pos', socket.$user.data);
+          if (timestamp - player.socket.$timestamp > 30_000) {
+            player.socket.$timestamp = timestamp;
+            player.socket.volatile.emit('data:pos', socket.$user.data, timestamp);
+          } else {
+            player.socket.volatile.emit('data:pos', socket.$user.data);
+          }
         }
       }
     }

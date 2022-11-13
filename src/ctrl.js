@@ -21,6 +21,7 @@ module.exports = (mode, socket) => {
     }
     socket.$room = room;
     socket.$user.socket = socket;
+    socket.$timestamp = Date.now();
 
     socket.join(roomId);
     socket.to(roomId).emit('msg:join', user);

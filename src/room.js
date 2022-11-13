@@ -22,7 +22,7 @@ const Room = class {
     this.destroyTimeout = 0;
     // 按游戏id写入日志
     this.logId = `[${id.slice(10) || id}]`.padEnd(12, ' ');
-    this.logger = createLogger({
+    this.logger = logLevel === 'verbose' ? createLogger({
       level: logLevel,
       label: this.id.slice(10),
       format: format.combine(
@@ -32,7 +32,7 @@ const Room = class {
       transports: [
         new transports.File({ filename: path.join('logs', 'room', this.id.slice(0, 10) + '.log') })
       ]
-    });
+    }) : null;
     if (name) {
       globalLogger.verbose(`Create room ${id}: ${name}`);
     } else {
@@ -51,14 +51,14 @@ const Room = class {
       clearTimeout(this.destroyTimeout);
       this.destroyTimeout = 0;
     }
-    this.logger.verbose(`player ${player.name}(${UID}) joined`);
+    this.logger?.verbose(`player ${player.name}(${UID}) joined`);
     return player;
   }
 
   removePlayer(player) {
     const i = this.players.indexOf(player);
     if (~i) this.players.splice(i, 1);
-    this.logger.verbose(`player ${player.name}(${player.uid}) left`);
+    this.logger?.verbose(`player ${player.name}(${player.uid}) left`);
     this.delayDestroy();
   }
 
