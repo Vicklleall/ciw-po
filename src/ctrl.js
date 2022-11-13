@@ -1,6 +1,11 @@
 const RoomManager = require('./room');
 
 module.exports = (mode, socket) => {
+  // ping延迟
+  socket.on('ping', callback => {
+    callback();
+  });
+
   // 创建新房间
   socket.on('ctrl:room', ({g: GID, n: roomName}, callback) => {
     const newRoom = RoomManager.newPublicRoom(mode, GID, roomName);
@@ -21,7 +26,6 @@ module.exports = (mode, socket) => {
     }
     socket.$room = room;
     socket.$user.socket = socket;
-    socket.$timestamp = Date.now();
 
     socket.join(roomId);
     socket.to(roomId).emit('msg:join', user);
