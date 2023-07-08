@@ -17,7 +17,7 @@ const Player = class {
   }
 };
 
-const registerPlayerEvents = socket => {
+const registerPlayerEvents = (mode, socket) => {
   // 更新玩家位置
   socket.on('data:pos', data => {
     if (!socket.$room || !socket.$user) return;
@@ -33,6 +33,15 @@ const registerPlayerEvents = socket => {
       }
     }
   });
+  // 合作模式数据
+  if (mode === 'coop') {
+    // 存档
+    socket.on('data:save', data => {
+      if (!socket.$room || !socket.$user) return;
+      socket.$room.data.s = data;
+      socket.to(socket.$room.id).emit('data:save', data);
+    });
+  }
 };
 
 module.exports = {

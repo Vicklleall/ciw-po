@@ -6,8 +6,8 @@ if (!config.maxConnections) {
   globalLogger.warn('config.maxConnections is not specified');
 }
 if (!config.updateInterval) {
-  globalLogger.warn('config.updateInterval is not specified, using default value 2')
-  config.updateInterval = 2
+  globalLogger.warn('config.updateInterval is not specified, using default value 2');
+  config.updateInterval = 2;
 }
 if (!config.port) {
   globalLogger.error('config.port is not specified');
@@ -25,10 +25,12 @@ const socketOptions = {
   path: '/s/',
   serveClient: false
 };
+const io = new Server(server, socketOptions);
+
 if (config.checkOrigin) {
   // 检查 user-agent 和 origin
   socketOptions.allowRequest = (req, callback) => {
-    callback(null, req.headers['user-agent'].includes('CloudIWanna') && req.headers['origin'] === 'ciw://app');
+    callback(null, io.engine.clientsCount < config.maxConnections && req.headers['user-agent'].includes('CloudIWanna') && req.headers['origin'] === 'ciw://app');
   };
   app.use('/i', (req, res, next) => {
     if (req.headers['user-agent'].includes('CloudIWanna') && req.headers['origin'] === 'ciw://app') {
@@ -39,9 +41,11 @@ if (config.checkOrigin) {
       res.status(403).end();
     }
   });
+} else {
+  socketOptions.allowRequest = (req, callback) => {
+    callback(null, io.engine.clientsCount < config.maxConnections);
+  };
 }
-
-const io = new Server(server, socketOptions);
 
 io.engine.on('headers', headers => {
   headers['CIW_PO'] = '*';

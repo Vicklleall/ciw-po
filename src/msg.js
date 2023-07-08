@@ -1,4 +1,4 @@
-module.exports = socket => {
+module.exports = (mode, socket) => {
   // 聊天消息
   socket.on('msg', data => {
     if (!socket.$room || !socket.$user) return;
