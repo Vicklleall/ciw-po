@@ -27,7 +27,7 @@ const registerPlayerEvents = (mode, socket) => {
       socket.to(socket.$room.id).emit('data:pos', socket.$user.data);
     } else {
       for (const player of socket.$room.players) {
-        if (player !== socket.$user && player.data.r === data.r && data.r >= 0) {
+        if (player !== socket.$user && (player.data.r === data.r || player.data.r === -data.r) && data.r >= 0) {
           player.socket.volatile.emit('data:pos', socket.$user.data);
         }
       }
