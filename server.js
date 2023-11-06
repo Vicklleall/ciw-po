@@ -3,7 +3,8 @@ const globalLogger = require('./src/logger');
 
 // 检查配置
 if (!config.maxConnections) {
-  globalLogger.warn('config.maxConnections is not specified');
+  globalLogger.warn('config.maxConnections is not specified, using default value 1000');
+  config.maxConnections = 1000;
 }
 if (!config.updateInterval) {
   globalLogger.warn('config.updateInterval is not specified, using default value 2');
@@ -16,7 +17,7 @@ if (!config.port) {
 
 const express = require('express');
 const { createServer } = require(config.https ? 'https' : 'http');
-const { Server } = require("socket.io");
+const { Server } = require('socket.io');
 
 const app = express();
 const server = createServer(config.https, app);
@@ -34,7 +35,6 @@ if (config.checkOrigin) {
   };
   app.use('/i', (req, res, next) => {
     if (req.headers['user-agent'].includes('CloudIWanna') && req.headers['origin'] === 'ciw://app') {
-      res.setHeader('CIW_PO', '*');
       next();
     } else {
       globalLogger.info(`Invalid request: [user-agent] ${req.headers['user-agent']} [origin] ${req.headers['origin']}`);
@@ -46,10 +46,6 @@ if (config.checkOrigin) {
     callback(null, io.engine.clientsCount < config.maxConnections);
   };
 }
-
-io.engine.on('headers', headers => {
-  headers['CIW_PO'] = '*';
-});
 
 // 服务器信息获取路由
 require('./src/info')(app, io);
