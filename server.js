@@ -45,6 +45,14 @@ if (config.checkOrigin) {
   socketOptions.allowRequest = (req, callback) => {
     callback(null, io.engine.clientsCount < config.maxConnections);
   };
+  // 跨域访问
+  app.use('/i', (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  });
+  io.engine.on('headers', headers => {
+    headers['Access-Control-Allow-Origin'] = '*';
+  });
 }
 
 // 服务器信息获取路由
