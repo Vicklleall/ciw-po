@@ -11,14 +11,12 @@ module.exports = {
   // 服务器端口号
   port: 3738,
 
-  // https 选项, 与传入 https.createServer() 的选项相同
+  // https 选项, 需要时设置
   /* 示例:
   https: {
-    key: fs.readFileSync('key.pem'),
-    cert: fs.readFileSync('cert.pem')
+    key_file_name: 'key.pem',
+    cert_file_name: 'cert.pem',
   }*/
-  // 如果不需要 https, 则设置为 null
-  https: null,
 
   // 输出日志级别 warn | info | verbose
   logLevel: 'verbose'

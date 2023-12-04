@@ -12,44 +12,32 @@ if (!config.updateInterval) {
 }
 if (!config.port) {
   globalLogger.error('config.port is not specified');
+  process.exit(1);
 }
 
+const uWebSockets = require("uWebSockets.js");
+const { Server } = require("socket.io");
 
-const express = require('express');
-const { createServer } = require(config.https ? 'https' : 'http');
-const { Server } = require('socket.io');
-
-const app = express();
-const server = createServer(config.https, app);
+const app = config.https ? uWebSockets.SSLApp(config.https) : uWebSockets.App();
 
 const socketOptions = {
   path: '/s/',
   serveClient: false
 };
-const io = new Server(server, socketOptions);
+const io = new Server(socketOptions);
+
+io.attachApp(app);
 
 if (config.checkOrigin) {
-  // 检查 user-agent 和 origin
+  // 检查 origin 和 user-agent
   socketOptions.allowRequest = (req, callback) => {
     callback(null, io.engine.clientsCount < config.maxConnections && req.headers['user-agent'].includes('CloudIWanna') && req.headers['origin'] === 'ciw://app');
   };
-  app.use('/i', (req, res, next) => {
-    if (req.headers['user-agent'].includes('CloudIWanna') && req.headers['origin'] === 'ciw://app') {
-      next();
-    } else {
-      globalLogger.info(`Invalid request: [user-agent] ${req.headers['user-agent']} [origin] ${req.headers['origin']}`);
-      res.status(403).end();
-    }
-  });
 } else {
   socketOptions.allowRequest = (req, callback) => {
     callback(null, io.engine.clientsCount < config.maxConnections);
   };
   // 跨域访问
-  app.use('/i', (req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    next();
-  });
   io.engine.on('headers', headers => {
     headers['Access-Control-Allow-Origin'] = '*';
   });
@@ -60,9 +48,10 @@ require('./src/info')(app, io);
 // 联机服务
 require('./src/socket')(io);
 
-server.listen(config.port, () => {
-  globalLogger.info('Running ciw-po server on port ' + config.port);
-});
-server.on('error', e => {
-  globalLogger.error(e);
+app.listen(config.port, listenSocket => {
+  if (listenSocket) {
+    globalLogger.info('Running ciw-po server on port ' + config.port);
+  } else {
+    globalLogger.error('Failed to launch ciw-po server on port ' + config.port);
+  }
 });
