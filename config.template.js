@@ -16,8 +16,8 @@ module.exports = {
   https: {
     key_file_name: 'key.pem',
     cert_file_name: 'cert.pem',
-  }*/
+  },*/
 
   // 输出日志级别 warn | info | verbose
-  logLevel: 'verbose'
+  logLevel: 'info'
 };
